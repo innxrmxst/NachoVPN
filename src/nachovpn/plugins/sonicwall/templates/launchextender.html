@@ -1,0 +1,1035 @@
+<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><title>Virtual Office</title><meta http-equiv='pragma' content='no-cache'><meta http-equiv='cache-control' content='no-cache'><meta http-equiv='cache-control' content='must-revalidate'><META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW"><link href='/themes/styleblueblackgrey.10.2.1.7-50sv.css' rel=stylesheet type='text/css'><script>
+	//status msg
+	var strWait = "Please wait...";
+	var strStatusVerify= "Verifying NetExtender Installation";
+	var strStatusInstall = "Installing NetExtender";
+	var strStatusDownload = "Downloading NetExtender";
+	var strStatusStart = "Starting NetExtender";
+	var strStatusUninstall = "Removing Previous NetExtender Installation";
+	var strStatusConnect = "Establishing NetExtender Connection";
+	var strStatusInstallNac = "Installing EndPoint Security Agent";
+	
+	//error msg
+	var strErrInit = "Failed to initialize NetExtender, this could be caused by a damaged or incompatible version of NetExtender!";
+	var strErrValidateServer = "Failed to validate the server, the server may be running on an old or incompatible firmware!";
+	
+	var strErrProxyAuth = "Incorrect user/password, proxy authentication failed!";
+	var strErrDownload = "Failed to download NetExtender installer!";
+	var strErrInstall = "Failed to launch NetExtender installer!";
+	var strErrInstallFail = "Failed to install NetExtender, the installation has been rolled back!";
+	var strErrInstallRequireAdmin = "NetExtender is not installed, please contact your system administrator for help!";
+	var strErrInstalltimeout = "Fail to install NetExtender, progress time-out!";
+	var strErrStart = "Failed to start NetExtender!";
+	var strErrStartRequireAdmin = "The NetExtender service is not running, please contact your system administrator for help!";
+	var strErrStarttimeout = "Failed to start NetExtender, progress time-out!";
+	var strErrOpen = "Failed to communicate with NetExtender. Please check version compatibility. If incompatible, please reinstall the client!";
+	var strErrUninstall = "Failed to launch NetExtender uninstaller!";
+	var strErrUninstalltimeout = "Failed to uninstall NetExtender, progress time-out!";
+	var strErrConnect = "Failed to establish connection!";
+	var strErrGUI = "Failed to launch NetExtender GUI client!";
+	var strErrConnecttimeout = "Fail to establish connection, progress time-out!";
+	var strErrUpgradeRequireAdmin = "The NetExtender on your system is too old, please contact your system administrator for upgrading!";
+	var strErrEpcCheckFail = "EndPoint Security check failed!";
+	var strErrEpcDownloadFail = "Download EPC Agent failed!";
+	var strErrEpcInstallFail = "Install EPC Agent failed!";
+	
+	var strErrRebootRequired = "The installation process has not yet been compeleted, please reboot before using NetExtender!";
+	
+	
+	var strErrBadInstallation = "A damaged version of NetExtender was detected on your computer, please reinstall NetExtender to fix the problem!";
+	
+	var progress_bar = null;
+	var timer_id;
+	var time_cost = 0;
+	var nac_time_cost = 0;
+	var nac_timeout_install = 180000;/*3 minutes*/
+	var timeout_neinstall = 300000; /*5 minutes*/
+	var timeout_neuninstall = 300000; /*5 minutes*/
+	var timeout_nestart = 60000;     /*1 minutes*/
+	var timeout_neconnect = 120000;  /*2 minutes*/
+	
+	/*install staus*/
+	var NE_IS_SUCCESS= 0;				/*install is finished and sccessful*/
+	var	NE_IS_BAD_INSTALL = 1;			/*install is finished but failed, uninstall is required before reinstall*/
+	var	NE_IS_REQUIRE_REBOOT = 2;		/*install is not finished yet, a reboot is required to finished installation*/
+	
+	/*install error*/
+	var NE_INSTALL_ERROR_NONE = 0;
+	var NE_INSTALL_ERROR_SERVICEFAIL = 1;
+	var NE_INSTALL_ERROR_ADMINREQUIRE = 2;
+	
+	var NE_CONNECT_ERROR_PROXYAUTHREQUIRE = 2;
+	
+	var NE_25_MIN_VER = 0x02050000;
+	
+	var winpops=0;
+	
+	var launchRdp = 0;
+	var epcversion ="936";
+	var required_nesversion = 0x00000000;
+	var autoConnectAfterLaunch =1;
+	var isIE = true;
+	var proxyUser = '';
+	var proxyPass = '';
+	var proxyAuthTry = 0;
+	var proxyNextFunction = '';
+	var MAX_PROXY_AUTH_TRY = 3;
+	
+	
+	function moveProgressbar(){
+		if (progress_bar != null){
+			progress_bar.setBar(0.04,true);  /*add 5% to the progress bar's progress*/
+			if (progress_bar.amt >= 1.0)
+				progress_bar.setBar(0.04);  /*reset to 5% to the progress bar's progress*/
+		}
+	
+	}
+	
+	function onError(msg){
+		NELaunchX1.ReleaseNeServiceCtrl();
+		alert(msg);
+		window.close();
+		return;
+	
+	}
+	
+	
+	
+	function neLauncherInit(){
+		NELaunchX1.InitLauncher();	
+	
+	NELaunchX1.serverAddress = "172.17.96.1";
+	NELaunchX1.userName = "user";
+	NELaunchX1.domainName = "LocalDomain";
+	NELaunchX1.sessionId = "py0nwVXgydGW17JQXQRq6nYdObmqUQyrzEUTbK8os8I=";
+	NELaunchX1.isSSLTunnel = 1;
+	NELaunchX1.serverPort = (window.location.port=="") ? 443 : parseInt(window.location.port);
+	NELaunchX1.policyEnforce = 0;
+	NELaunchX1.displayName = "user";
+	NELaunchX1.authType = "local";
+	NELaunchX1.AddRouteEntry("192.168.200.0", "255.255.255.0");
+	NELaunchX1.ipv6Support = "no";
+	NELaunchX1.tunnelAllMode = 0;
+	NELaunchX1.exitAfterDisconnect = 0;
+	NELaunchX1.uninstallAfterExit = 0;
+	NELaunchX1.noProfileCreate = 0;
+	NELaunchX1.allowSavePassword = 0;
+	NELaunchX1.allowSaveUser = 1;
+	NELaunchX1.allowDisableUpdate = 0;
+	NELaunchX1.clientIPLower = "192.168.200.100";
+	NELaunchX1.clientIPHigher = "192.168.200.200";
+		neValidateServer();
+	}
+	function neValidateServer(){
+		NELaunchX1.SetIEProxy();
+		NELaunchX1.SetProxyAuth(proxyUser, proxyPass);
+		NELaunchX1.ValidateServer();
+		if (NE_CONNECT_ERROR_PROXYAUTHREQUIRE == NELaunchX1.statusId){
+			if (MAX_PROXY_AUTH_TRY < proxyAuthTry)
+				onError(strErrProxyAuth);
+			else
+				proxyAuth('neValidateServer()');
+		}else if (0 > NELaunchX1.statusId){
+			onError(strErrValidateServer);
+		}else{
+			setTimeout('neInit()', 100);
+		}
+		return;
+	}
+	
+	function neLauncherStart(){
+		var agent = navigator.userAgent.toLowerCase();
+		isIE = (agent.indexOf("msie") != -1);
+		if (!isIE){	//if not IE, try NPAPI plugin anyway
+			try {
+				NELaunchX1 =  document.nelauncher_plugin;
+			} catch (err) {
+				alert(err);
+				window.location = "/cgi-bin/sslvpnclient?launcherror=nopluginsupport";
+				return;
+			}
+		}
+	
+		if ((!isIE) && (!NELaunchX1)){
+			//no plugin loaded, show the error message
+			window.location = "/cgi-bin/sslvpnclient?launcherror=nopluginsupport";
+			return;
+		}
+	
+		if ((!isIE)||(NELaunchX1.object)){
+			replaceHTML(document.getElementById('axinstallinstr'), "");
+			neLauncherInit();
+			if (isIE &&(NELaunchX1.object)){
+			/*check protected mode for IE*/
+				if (1 == NELaunchX1.isProtectedModeProcess){
+					window.location = "/cgi-bin/sslvpnclient?launcherror=ieprotected";
+					return;
+				}
+			}
+	
+		}else{
+			replaceHTML(document.getElementById('launchstatus'), "");
+		}
+	}
+	
+	function neInit(){
+		updateStatus(strStatusVerify, strWait);
+		moveProgressbar();
+		NELaunchX1.InitNEServiceCtrl();
+		if (0 > NELaunchX1.statusId){
+			onError(strErrInit);
+			return;
+		}
+		setTimeout('neInstall()', 100);
+	}
+	function neInstallOK(){
+	
+		if (0 == NELaunchX1.isAdmin)
+			return (0 != NELaunchX1.isNetExtenderInstalled);
+	
+		return ((0 != NELaunchX1.isNetExtenderInstalled)&&
+			(0 != NELaunchX1.isNeDriverInstalled)&&
+			((0 != NELaunchX1.isNeRasInstalled)||(0 != NELaunchX1.isRebootNeeded)));
+	}
+	
+	function neInstallWait(){
+		//wait until the installer exist
+		if ( time_cost >= timeout_neinstall){
+			onError(strErrInstalltimeout);
+			return;
+		}
+		if (0 != NELaunchX1.isNetExtenderInstalling){
+			if (NE_INSTALL_ERROR_NONE == NELaunchX1.installResult){
+		moveProgressbar();
+		time_cost += 100;
+		setTimeout('neInstallWait()', 100);
+				return;
+			}
+		}
+		if (neInstallOK()){
+			if (0 != NELaunchX1.isRebootNeeded){
+				finishRebootNeed();
+				return;
+			}
+			setTimeout('neStart()', 100);
+			return;
+		}
+	
+		if (1 == NELaunchX1.isVistaOrLater){
+			if (NE_INSTALL_ERROR_ADMINREQUIRE == NELaunchX1.installResult){
+			onError(strErrUpgradeRequireAdmin);
+				return;
+			}
+		}
+	
+		onError(strErrInstallFail);
+		return;
+	}
+	
+	function neDownloadNx(){
+		moveProgressbar();
+		updateStatus(strStatusDownload, strWait);
+		NELaunchX1.DownloadNxInstallerWithAsycMode();
+	}
+	function neDownloadNxWait(){
+		//wait until NX binary download finished
+		if ( time_cost >= timeout_neinstall){
+			onError(strErrInstalltimeout);
+			return;
+		}	
+		//NLX_DL_ERROR = -1,NLX_DL_STOPED = 0,NLX_DL_DOWNLOADING = 1,NLX_DL_PROXY_AUTH_REQUIRED = 2,NLX_DL_SUCCEEDED = 3
+		var dlStatus = NELaunchX1.downloadStatus;
+		if (1 == dlStatus){
+			//still in downloading status
+			setTimeout('neDownloadNxWait()', 100);
+			return;
+		}else if(2 == dlStatus){
+			if (MAX_PROXY_AUTH_TRY < proxyAuthTry)
+				onError(strErrProxyAuth);
+			else
+				proxyAuth('neInstall()');
+			return;
+		}
+		if(3 == dlStatus){
+			neDownloadNxOK();
+		}
+		else{
+			onError(strErrInstall);
+		}
+	}
+	
+	function neDownloadNxOK(){
+		updateStatus(strStatusInstall, strWait);
+		NELaunchX1.InstallNetExtender(1);
+		if (0 > NELaunchX1.statusId){
+			onError(strErrDownload);
+			return;
+		}
+		time_cost = 500;
+		setTimeout('neInstallWait()', 500);
+	}
+	
+	function neInstall(){
+		moveProgressbar();
+		if (!neInstallOK()){
+	
+			if (1 != NELaunchX1.isVistaOrLater){
+				//if the OS is Vista or later, pass the admin check
+				if (0 == NELaunchX1.isAdmin){
+				onError(strErrInstallRequireAdmin);
+	
+					return;
+				}
+			}
+			NELaunchX1.SetIEProxy();
+			NELaunchX1.SetProxyAuth(proxyUser, proxyPass);
+			try{
+				neDownloadNx();
+				if (0 > NELaunchX1.statusId){
+					onError(strErrDownload);
+					return;
+				}
+				time_cost = 500;
+				setTimeout('neDownloadNxWait()', 500);
+			}catch(err){
+				//if not support aync download api, then keep using old way
+				updateStatus(strStatusDownload, strWait);
+				NELaunchX1.DownloadNxInstaller();
+				if (NE_CONNECT_ERROR_PROXYAUTHREQUIRE == NELaunchX1.statusId){
+					if (MAX_PROXY_AUTH_TRY < proxyAuthTry)
+					onError(strErrProxyAuth);
+					else
+						proxyAuth('neInstall()');
+					return;
+				}
+				if (0 > NELaunchX1.statusId){
+					onError(strErrDownload);
+					return;
+				}
+				updateStatus(strStatusInstall, strWait);
+				NELaunchX1.InstallNetExtender(1);
+				if (0 > NELaunchX1.statusId){
+					onError(strErrInstall);
+					return;
+				}
+				time_cost = 500;
+				setTimeout('neInstallWait()', 500);			
+			}
+		}else{
+			var is_status = NELaunchX1.installationStatus;
+			if (NE_IS_SUCCESS == is_status){
+				setTimeout('neStart()', 100);
+				return;
+			}
+			else if (NE_IS_REQUIRE_REBOOT == is_status){
+				onError(strErrRebootRequired);
+				return;
+			}else{
+				onError(strErrBadInstallation);
+				return;
+			}
+		}
+	}
+	
+	function neStartWait(){
+		if (0 != NELaunchX1.isNEServiceRunning){
+			NELaunchX1.OpenService();
+			if (0 > NELaunchX1.statusId){
+				onError(strErrOpen);
+				return;
+			}
+			setTimeout('neLaunch()', 100);
+			return;
+		}
+		if ( time_cost >= timeout_nestart){
+			onError(strErrStarttimeout);
+			return;
+		}
+		moveProgressbar();
+		time_cost += 100;
+		setTimeout('neStartWait()', 100);
+	}
+	
+	function neStart(){
+		moveProgressbar();
+		updateStatus(strStatusStart, strWait);
+		if (0 == NELaunchX1.isNEServiceRunning){
+			if (1 != NELaunchX1.isVistaOrLater){
+				//if the OS is Vista or later, pass the admin check
+				if (0 == NELaunchX1.isAdmin){
+				onError(strErrStartRequireAdmin);
+	
+					return;
+				}
+			}
+			time_cost = 0;
+			NELaunchX1.StartNEService();
+			if (0 > NELaunchX1.statusId){
+				onError(strErrStart);
+				return;
+			}
+			time_cost = 100;
+		}
+		setTimeout('neStartWait()', 100);
+	}
+	
+	function neUninstallOK(){
+		if (0 != NELaunchX1.isNetExtenderInstalled){
+			return false;
+		}
+		return true;
+	}
+	
+	function neUninstallWait(){
+		if (neUninstallOK()){
+			setTimeout('neInit()', 500);
+			return;
+		}
+		if ( time_cost >= timeout_neuninstall){
+			onError(strErrUninstalltimeout);
+			return;
+		}
+		moveProgressbar();
+		time_cost += 100;
+		setTimeout('neUninstallWait()', 100);
+	}
+	
+	function neUninstall(){
+		moveProgressbar();
+		updateStatus(strStatusUninstall, strWait);
+		if (!neUninstallOK()){
+			NELaunchX1.ReleaseNeServiceCtrl();
+			NELaunchX1.UninstallNetExtender(1, 0);
+			if (0 > NELaunchX1.statusId){
+				onError(strErrUninstall);
+				return;
+			}
+			time_cost = 100;
+		}
+		setTimeout('neUninstallWait()', 100);
+	}
+	
+	function neConnectWait(){
+		var ret = NELaunchX1.isNetExtenderConnected;
+		if (0 != ret){
+			NELaunchX1.StartNEGuiWithParam("-showLastError");
+			if(!launchRdp){
+				NELaunchX1.ReleaseNeServiceCtrl();
+				if (0 > NELaunchX1.statusId){
+					onError(strErrGUI);
+					return;
+				}
+			}
+			else{
+				rdpLauncherInit();
+				if(1 == ret)
+					NELaunchX1.LaunchRdp();
+				else
+					NELaunchX1.AddPendingRdp();
+				NELaunchX1.ReleaseNeServiceCtrl();
+			}
+			window.close();
+			return;
+		}
+		if ( time_cost >= timeout_neconnect){
+			onError(strErrConnecttimeout);
+			return;
+		}
+		moveProgressbar();
+		time_cost += 100;
+		setTimeout('neConnectWait()', 100);
+	}
+	
+	function downloadNACWait()
+	{
+		//download NAC Agent
+		if(NELaunchX1.isNACAgentDownloaded != 1)
+		{
+			moveProgressbar();
+			updateStatus(strStatusInstallNac, strWait);
+			
+			if(nac_time_cost >= nac_timeout_install)
+			{
+				onError(strErrEpcDownloadFail);
+				return;
+			}
+			moveProgressbar();
+			nac_time_cost += 100;
+			setTimeout('downloadNACWait()', 100);
+			return;
+		}
+	
+		//install NAC Agent
+		NELaunchX1.CheckNACAgentInstalled(epcversion);
+		if(NELaunchX1.statusId != 0)
+		{
+			moveProgressbar();
+			updateStatus(strStatusInstallNac, strWait);
+			if(nac_time_cost >= nac_timeout_install)
+			{
+				onError(strErrEpcInstallFail);
+				return;
+			}		
+	
+			nac_time_cost += 100;
+			setTimeout('downloadNACWait()', 100);
+			return;
+		}
+		NELaunchX1.EPCCheck();
+		if (0 != NELaunchX1.statusId){
+			NELaunchX1.StartNEGuiWithParam("-showLastError");
+			window.close();
+			return;			
+		}
+		
+		moveProgressbar();
+		updateStatus(strStatusConnect, strWait);
+		NELaunchX1.Connect();
+		if (0 > NELaunchX1.statusId){
+			NELaunchX1.StartNEGuiWithParam("-showLastError");
+			onError(strErrConnect);
+			return;
+		}else if (0 < NELaunchX1.statusId){
+		//more information needed, show GUI to handle user input.
+			NELaunchX1.StartNEGuiWithParam("-showLastError");
+			window.close();
+			return;
+		}
+	
+		time_cost = 100;
+		setTimeout('neConnectWait()', 100);
+	}
+	
+	function neConnect(){
+		moveProgressbar();
+		updateStatus(strStatusConnect, strWait);
+		if (1 != NELaunchX1.isNetExtenderConnected){	
+			NELaunchX1.startByBookmark = 1;
+			NELaunchX1.Connect();
+			if (0 > NELaunchX1.statusId){
+				NELaunchX1.StartNEGuiWithParam("-showLastError");
+				onError(strErrConnect);
+				return;
+			}else if (0 < NELaunchX1.statusId){
+			//more information needed, show GUI to handle user input.
+	
+				NELaunchX1.StartNEGuiWithParam("-showLastError");
+	
+				window.close();
+	
+				return;
+	
+			}
+	
+	
+			time_cost = 100;
+		}
+		else
+			NELaunchX1.startByBookmark = 0;
+		setTimeout('neConnectWait()', 100);
+	}
+	
+	function neLaunch(){
+		if ((required_nesversion > NELaunchX1.serviceVersion)&&(NELaunchX1.isUpgradable)){
+			if (NE_25_MIN_VER > NELaunchX1.serviceVersion){
+				//for version before 2.5, uninstall the old Nx, for 2.5 or later NX, the Nx application will take care upgrade
+				if (1 != NELaunchX1.isVistaOrLater){
+					//if the OS is Vista or later, pass the admin check
+					if (0 == NELaunchX1.isAdmin){
+				onError(strErrUpgradeRequireAdmin);
+	
+						return;
+					}
+				}
+			neUninstall();
+			return;
+			}
+		}
+		if (0 != autoConnectAfterLaunch){
+			NELaunchX1.SetIEProxy();
+	
+	
+			neConnect();
+			return;
+		}else{
+			NELaunchX1.StartNEGuiWithParam("-showLastError");
+			NELaunchX1.ReleaseNeServiceCtrl();
+			if (0 > NELaunchX1.statusId){
+				onError(strErrGUI);
+				return;
+			}
+		}
+	}
+	
+	function proxyAuth(nextFunc){
+		if (proxyNextFunction.value != nextFunc.value)
+			proxyAuthTry = 1;
+		else
+			proxyAuthTry++;
+	
+		proxyNextFunction = nextFunc;
+		var statusPage = document.getElementById("neInstallStatusPage");
+		var proxyAuthPage = document.getElementById("neproxyAuthPage");
+		var rebootPage = document.getElementById("neInstallRebootPage");
+		if (statusPage){
+			statusPage.style.visibility="hidden";
+			statusPage.style.zIndex="3";
+		}
+		if (rebootPage){
+			rebootPage.style.visibility="hidden";
+			rebootPage.style.zIndex="1";
+		}
+		if (proxyAuthPage){
+			proxyAuthPage.style.visibility="visible";
+			proxyAuthPage.style.zIndex="4";
+		}
+		return;
+	}
+	
+	function onProxyAuthNextBtn(){
+		var statusPage = document.getElementById("neInstallStatusPage");
+		var proxyAuthPage = document.getElementById("neproxyAuthPage");
+		var rebootPage = document.getElementById("neInstallRebootPage");
+		if (proxyAuthPage){
+			proxyUser = document.getElementById("proxy_user").value;
+			proxyPass = document.getElementById("proxy_pass").value;
+			if (proxyUser == '')
+			{
+				alert("Invalid user name!");
+				document.getElementById('proxy_user').focus();
+				return;
+			}
+			if (proxyPass == '')
+			{
+				alert("Invalid password!");
+				document.getElementById('proxy_pass').focus();
+				return;
+			}
+			proxyAuthPage.style.visibility="hidden";
+			proxyAuthPage.style.zIndex="2";
+		}
+		if (rebootPage){
+			rebootPage.style.visibility="hidden";
+			rebootPage.style.zIndex="1";
+		}
+		if (statusPage){
+			statusPage.style.visibility="visible";
+			statusPage.style.zIndex="4";
+		}
+		setTimeout(proxyNextFunction, 50);
+		return;
+	}
+	
+	function finishRebootNeed(){
+		var statusPage = document.getElementById("neInstallStatusPage");
+		var proxyAuthPage = document.getElementById("neproxyAuthPage");
+		var rebootPage = document.getElementById("neInstallRebootPage");
+		if (statusPage){
+			statusPage.style.visibility="hidden";
+			statusPage.style.zIndex="3";
+		}
+		if (proxyAuthPage){
+			proxyAuthPage.style.visibility="hidden";
+			proxyAuthPage.style.zIndex="2";
+		}
+		if (rebootPage){
+			rebootPage.style.visibility="visible";
+			rebootPage.style.zIndex="4";
+		}
+		return;
+	}
+	
+	function finishInstall(){
+		var reboot = document.getElementById("neRebootYes");
+		if (reboot){
+			if (reboot.checked){
+				NELaunchX1.RebootSystem();
+				return;
+			}
+		}
+		window.close();
+	}
+	
+	var NE_progBar = 0;
+	
+	function getRefToDivNest( divID, oDoc ) {
+		if( !oDoc ) { oDoc = document; }
+		if( document.layers ) {
+			if( oDoc.layers[divID] ) { return oDoc.layers[divID]; } else {
+				for( var x = 0, y; !y && x < oDoc.layers.length; x++ ) {
+					y = getRefToDivNest(divID,oDoc.layers[x].document); }
+				return y; } }
+		if( document.getElementById ) { return document.getElementById(divID); }
+		if( document.all ) { return document.all[divID]; }
+		return document[divID];
+	}
+	
+	function progressBar( oBt, oBc, oBg, oBa, oWi, oHi, oDr ) {
+		 NE_progBar++;
+		this.id = 'NE_progBar' + NE_progBar;
+		this.dir = oDr; this.width = oWi; this.height = oHi; this.amt = 0;
+	//write the bar as a layer in an ilayer in two tables giving the border
+		 document.write( '<table border="0" cellspacing="0" cellpadding="'+oBt+'"><tr><td bgcolor="'+oBc+'">'+
+			'<table border="0" cellspacing="0" cellpadding="0"><tr><td height="'+oHi+'" width="'+oWi+'" bgcolor="'+oBg+'">' );
+	
+		 if( document.layers ) {
+			 document.write( '<ilayer height="'+oHi+'" width="'+oWi+'"><layer bgcolor="'+oBa+'" name="NE_progBar'+NE_progBar+'"></layer></ilayer>' );
+		 } else {
+			 document.write( '<div style="position:relative;top:0px;left:0px;height:'+oHi+'px;width:'+oWi+';">'+
+				'<div style="top:0px;left:0px;height:0px;width:0;font-size:1px;background-color:'+oBa+';" id="NE_progBar'+NE_progBar+'"></div></div>' );
+	
+		 }
+		 document.write( '</td></tr></table></td></tr></table>\n' );
+	
+		 this.setBar = resetBar; //doing this inline causes unexpected bugs in early NS4
+		 this.setCol = setColour;
+	}
+	
+	function resetBar( a, b ) {
+	//work out the required size and use various methods to enforce it
+		this.amt = ( typeof( b ) == 'undefined' ) ? a : b ? ( this.amt + a ) : ( this.amt - a );
+		if( isNaN( this.amt ) ) { this.amt = 0; } if( this.amt > 1 ) { this.amt = 1; } if( this.amt < 0 ) { this.amt = 0; }
+		var theWidth = Math.round( this.width * ( ( this.dir % 2 ) ? this.amt : 1 ) );
+		var theHeight = Math.round( this.height * ( ( this.dir % 2 ) ? 1 : this.amt ) );
+		var theDiv = getRefToDivNest( this.id ); if( !theDiv ) { window.status = 'Progress: ' + Math.round( 100 * this.amt ) + '%'; return; }
+		if( theDiv.style ) { theDiv = theDiv.style; theDiv.clip = 'rect(0px '+theWidth+'px '+theHeight+'px 0px)'; }
+		var oPix = document.childNodes ? 'px' : 0;
+		theDiv.width = theWidth + oPix; theDiv.pixelWidth = theWidth; theDiv.height = theHeight + oPix; theDiv.pixelHeight = theHeight;
+		if( theDiv.resizeTo ) { theDiv.resizeTo( theWidth, theHeight ); }
+		theDiv.left = ( ( this.dir != 3 ) ? 0 : this.width - theWidth ) + oPix; theDiv.top = ( ( this.dir != 4 ) ? 0 : this.height - theHeight ) + oPix;
+	}
+	
+	function setColour( a ) {
+	//change all the different colour styles
+		var theDiv = getRefToDivNest( this.id ); if( theDiv.style ) { theDiv = theDiv.style; }
+		theDiv.bgColor = a; theDiv.backgroundColor = a; theDiv.background = a;
+	}
+	
+	function replaceHTML(obj,text){
+		while(el = obj.childNodes[0]){
+			obj.removeChild(el);
+		}
+		obj.appendChild(document.createTextNode(text));
+	}
+	
+	function updateStatus(_status, _detail){
+		replaceHTML(document.getElementById('status'), _status);
+		replaceHTML(document.getElementById('detail'), _detail);
+	}
+	</script>
+	</head>
+	<body class="mainback" bgcolor="#d4d1c8"  onLoad="neLauncherStart();" leftmargin=0 topmargin=0 marginwidth=0 marginheight=0>
+	<div id="neInstallStatusPage" style="top:10px;position:absolute;z-index:3;">
+	<table cellspacing=0 cellpadding=0 width="100%" height = "100%" border=0>
+	<tr id="launchstatus">
+		<td>
+			<table cellspacing=0 cellpadding=0 width="100%" border=0>
+			<tr>
+				<td colspan=3 height=110><img src="/images/shim.gif" height=110></td>
+			</tr>
+			<tr>
+				<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+				<td>
+					<center>
+					<table valign="top" border=0 class="logintable" cellpadding=0 cellspacing=0  style="left:0px;">
+						<tbody>
+							<tr>
+								<td cellpadding=10 valign="top">
+									<table border=0 cellpadding=1 cellspacing=0 valign="top">
+									<tr>
+										<td colspan=3 width=1 height=10><img src="/images/shim.gif" width=1 height=10></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+										<td cellpadding=0 cellspacing=0 width=350>
+											<font class="toolbar" style="font-size:14px;"><b><div id="status">&nbsp;</div></b></font>
+										</td>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td colspan=3 cellpadding=0 cellspacing=0 height=3><img src="/images/shim.gif" height=3 width=1></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+										<td cellpadding=0 cellspacing=0 width=350>
+											<font class="toolbar"><div id="detail">&nbsp;</div></font>
+										</td>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td colspan=3 cellpadding=0 cellspacing=0 height=3><img src="/images/shim.gif" height=3 width=1></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td width=32 height=8><img src="/images/shim.gif" height=8 width=32></td>
+										<td cellpadding=0 cellspacing=0 width=350 height=8>
+										<script>
+											progress_bar = new progressBar(
+																1,         //border thickness
+																'#8f8f8f', //border colour
+																'#ffffff', //background colour
+																'#8080ff', //bar colour
+																350,       //width of bar (excluding border)
+																8,        //height of bar (excluding border)
+																1          //direction of progress: 1 = right, 2 = down, 3 = left, 4 = up
+															);
+										</script>
+										</td>
+										<td width=32 height=8><img src="/images/shim.gif" height=8 width=32></td>
+									</tr>
+									<tr>
+										<td colspan=2 height=5><img src="/images/shim.gif" height=11></td>
+									</tr>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					</center>
+				</td>
+				<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+			</tr>
+			<tr>
+				<td colspan=3 height=20><img src="/images/shim.gif" height=20></td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+	<tr id="axinstallinstr">
+		<td>
+		<!-- note for windows 8 -->
+	<script type='text/javascript'>
+		function isIEMetroMode()
+		{
+			var errName 			= null;
+			var isDesktopMode 	= null;
+			try
+			{
+				new ActiveXObject("");
+			} catch (e)
+			{
+				errName = e.name;	
+			}
+	
+			if( errName == "ReferenceError" )
+				return false;
+	
+			try
+			{
+				var testObj = new ActiveXObject("htmlfile");
+			} catch (e)
+			{
+				isDesktopMode = false;
+			}
+	
+			if( isDesktopMode == false )
+				return true;
+			else
+				return false;
+		}
+		
+		var isWin8Metro = false;
+		isWin8Metro = isIEMetroMode();
+		if( isWin8Metro )
+		{
+			document.write('<center><br>Note:&nbsp;<font color=\'red\'>Plugin is not supported on Windows 8 Modern UI. Please switch to Desktop mode manually to install plugin.</font></center>');
+		}
+	</script>
+			<center>
+			<br>You may also <b><a href="/">manually download NetExtender</a></b> and run it.  
+			<br>You may be required to login again after launching.
+			<br><br>
+			<br>To get NetExtender for another platform go to the <b><a href="/cgi-bin/clientdownloads?client=netextender">All Downloads</a></b> page.
+			<br><br>
+			
+			<b>NetExtender ActiveX Installer Instructions</b><br>
+			<table cellspacing=0 cellpadding=1 width="100%" border=0>
+				<tr>
+					<td width="3%">&nbsp;</td>
+					<td width="25%"><font class="toolbar"><font size=3><b>Step 1</b></font> - A yellow information bar may appear at the top of the browser.</font></td>
+					<td width="70%"><img src="/images/neaxw1.gif" ></td>
+				</tr>
+				<tr>
+					<td  colspan=3 height=5><img src="/images/shim.gif" width=1 height=5></td>
+				</tr>
+				<tr valign=top>
+					<td width="3%">&nbsp;</td>
+					<td width="25%"><font class="toolbar"><font size=3><b>Step 2</b></font> - If it does, please click on the yellow bar and choose <b>Install ActiveX Control...</b></font></td>
+					<td width="70%"><img src="/images/neaxw2.gif" ></td>
+				</tr>
+				<tr>
+					<td  colspan=3 height=5><img src="/images/shim.gif" width=1 height=5></td>
+				</tr>
+				<tr valign=top>
+					<td width="3%">&nbsp;</td>
+					<td width="25%"><font class="toolbar"><font size=3><b>Step 3</b></font> - If a Security Warning window appear, <br>Click <b>Install</b> to proceed.</font></td>
+					<td width="70%"><img src="/images/neaxw3.gif" ></td>
+				</tr>
+			</table>
+			</center>
+		</td>
+	</tr>
+	</table>
+	   </div>
+	   <div id="neInstallRebootPage" style="top:10px;position:absolute;z-index:1;visibility:hidden">
+	<table cellspacing=0 cellpadding=0 width="100%" height = "100%" border=0>
+	<tr>
+		<td  height=20><img src="/images/shim.gif" width=1 height=20></td>
+	</tr>
+	<tr>
+		<td>
+			<center>
+			<b>Before running NetExtender, it is required that you restart your computer.
+			</center>
+		</td>
+	   </tr>
+	<tr>
+		<td  height=20><img src="/images/shim.gif" width=1 height=20></td>
+	</tr>
+	   <tr>
+		<td>
+			<center>
+			<table cellspacing=0 cellpadding=1 width="100%" border=0>
+				<tr>
+					<td width="30%">&nbsp;</td>
+					<td colspan=2><input type=radio id="neRebootYes" name="neReboot" value="yes" checked><label for="neRebootYes">Yes, restart immediately (Recommended).</label></td>
+				</tr>
+				<tr>
+					<td  colspan=3 height=5><img src="/images/shim.gif" width=1 height=5></td>
+				</tr>
+				<tr>
+					<td width="30%">&nbsp;</td>
+					<td colspan=2><input type=radio id="neRebootNo" name="neReboot" value="no"><label for="neRebootNo">No, I will restart my computer later</label></td>
+				</tr>
+				<tr>
+					<td  colspan=3 height=40><img src="/images/shim.gif" width=1 height=40></td>
+				</tr>
+				<tr>
+					<td colspan=2 width="75%">&nbsp;</td>
+					<td align="center">
+						<table border=0 cellpadding=0 cellspacing=0 valign="top">
+							<tbody>
+								<tr>
+									<td width=100 height=22 valign="top" align="center">
+									<table cellpadding=0 cellspacing=0 border=0 margin=0>
+										<tr>
+											<td width=99 class=bbcenter align=center valign=center height=21
+												style="padding-bottom:1px;padding-top:1px;"
+												onClick="JavaScript:finishInstall();"
+												onMouseOver="JavaScript:this.className='bbcenteron';"
+												onMouseOut="JavaScript:this.className='bbcenter';">
+												<font class="bbuttons">Finish</font>
+											</td>
+										</tr>
+									</table>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+	
+				</tr>
+			</table>
+			</center>
+		</td>
+	</tr>
+	</table>
+	   </div>
+	<div id="neproxyAuthPage" style="top:10px;position:absolute;z-index:2;visibility:hidden">
+	<table cellspacing=0 cellpadding=0 width="100%" height = "100%" border=0>
+	<tr>
+		<td>
+			<table cellspacing=0 cellpadding=0 width="100%" border=0>
+			<tr>
+				<td colspan=3 height=110><img src="/images/shim.gif" height=110></td>
+			</tr>
+			<tr>
+				<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+				<td>
+					<center>
+					<table valign="top" border=0 class="logintable" cellpadding=0 cellspacing=0  style="left:0px;">
+						<tbody>
+							<tr>
+								<td cellpadding=10 valign="top">
+									<table border=0 cellpadding=1 cellspacing=0 valign="top">
+									<tr>
+										<td colspan=4 width=1 height=10><img src="/images/shim.gif" width=1 height=10></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+										<td colspan=2 cellpadding=0 cellspacing=0 width=350>
+											<font class="toolbar" style="font-size:14px;"><b>NetExtender has detected that the proxy server you are using requires authentication:</b></font>
+										</td>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td colspan=4 cellpadding=0 cellspacing=0 height=3><img src="/images/shim.gif" height=3 width=1></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+										<td cellpadding=0 cellspacing=0>
+											<font class="toolbar">User Name: </font>
+										</td>
+										<td cellpadding=0 cellspacing=0 width=200>
+											<input type="input" id='proxy_user' style='width:200px;height:20px;' size=20 value='' onFocus="if(disabled) blur();" autocomplete='off'>
+										</td>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+										<td cellpadding=0 cellspacing=0>
+											<font class="toolbar">Password: </font>
+										</td>
+										<td cellpadding=0 cellspacing=0 width=200>
+											<input type="password" id='proxy_pass' style='width:200px;height:20px;' size=20 value='' onFocus="if(disabled) blur();" autocomplete='off'>
+										</td>
+										<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td colspan=4 cellpadding=0 cellspacing=0 height=8><img src="/images/shim.gif" height=8 width=1></td>
+									</tr>
+									<tr cellpadding=0 cellspacing=0>
+										<td align="right" colspan=4 cellpadding=1 cellspacing=4>
+											<table border=0 cellpadding=0 cellspacing=0 valign="top">
+												<tbody>
+													<tr >
+														<td width=100 height=22 valign="top" align="center">
+														<table cellpadding=0 cellspacing=0 border=0 margin=0>
+															<tr>
+																<td width=99 class=bbcenter align=center valign=center height=21
+																	style="padding-bottom:1px;padding-top:1px;"
+																	onClick="JavaScript:onProxyAuthNextBtn();"
+																	onMouseOver="JavaScript:this.className='bbcenteron';"
+																	onMouseOut="JavaScript:this.className='bbcenter';">
+																	<a href="#"><font class="bbuttons">Continue</font></a>
+																</td>
+															</tr>
+														</table>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</td>
+										<td width=8><img src="/images/shim.gif" height=1 width=8></td>
+									</tr>
+									<tr>
+										<td colspan=4 height=5><img src="/images/shim.gif" height=11></td>
+									</tr>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					</center>
+				</td>
+				<td width=32><img src="/images/shim.gif" height=1 width=32></td>
+			</tr>
+			<tr>
+				<td colspan=3 height=20><img src="/images/shim.gif" height=20></td>
+			</tr>
+			</table>
+		</td>
+	</tr>
+	</table>
+	</div>
+	
+	</body></html>

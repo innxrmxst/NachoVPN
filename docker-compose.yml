@@ -1,0 +1,24 @@
+services:
+  nachovpn:
+    container_name: nachovpn
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./certs/:/app/certs/
+      - ./payloads/:/app/payloads/
+      - ./downloads/:/app/downloads/
+      - ./payloads/:/app/payloads/
+    environment:
+      - SERVER_FQDN=${SERVER_FQDN:-}
+      - EXTERNAL_IP=${EXTERNAL_IP:-}
+      - SKIP_CERTBOT=${SKIP_CERTBOT:-}
+    networks:
+      - backend
+
+networks:
+  backend:

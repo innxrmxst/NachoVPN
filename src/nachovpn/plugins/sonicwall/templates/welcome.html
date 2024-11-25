@@ -1,0 +1,243 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html;charset=UTF-8'>
+<title>Virtual Office</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv='pragma' content='no-cache'>
+<meta http-equiv='cache-control' content='no-cache'>
+<meta http-equiv='cache-control' content='must-revalidate'>
+<meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+<!-- Windows 8.1 custom tile settings in 'Immersive' mode -->
+
+<meta name="application-name" content="VirtualOffice" />
+
+<meta name="msapplication-TileColor" content="#0085C3" />
+<meta name="msapplication-square70x70logo" content="/images/logo/VirtualOffice.gif" />
+<meta name="msapplication-square150x150logo" content="/images/logo/VirtualOffice.gif" />
+<meta name="msapplication-wide310x150logo" content="/images/logo/VirtualOffice.gif" />
+<meta name="msapplication-square310x310logo" content="/images/logo/VirtualOffice.gif" />
+<!-- End Windows 8.1 custom tile settings in 'Immersive' mode -->
+
+
+<link rel="shortcut icon" href="/favicon.ico"/>
+
+<link type="text/css" href="/swl_styles.10.2.1.7-50sv.css" rel="stylesheet">
+<link href='/swl_login.10.2.1.7-50sv.css' type='text/css' rel='stylesheet'>
+<link href='/swl_header.10.2.1.7-50sv.css' type='text/css' rel='stylesheet'>
+<link href='/sma_content_overrides.10.2.1.7-50sv.css' type='text/css' rel='stylesheet'>
+<link href='/sma_login_overrides.10.2.1.7-50sv.css' type='text/css' rel='stylesheet'>
+<link href="/notificationbar.10.2.1.7-50sv.css" type="text/css" rel="stylesheet">
+<script src="/js/jquery.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/jquery.cookie.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/jquery.form.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/jquery.validate.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/jquery.qrcode.min.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/mainframe.10.2.1.7-50sv.js"></script>
+<script src="/js/base64.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/schemeurl.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/login.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script type='text/javascript'>
+try {
+	if (window.opener && window != window.opener && window.opener.location.host == window.location.host) {
+		window.opener.top.location.href = location.href;
+		window.close();
+	}
+} catch (err) {
+	// This happens if the opener was not the SSL-VPN; nothing to worry about
+}
+if(window!=top) {
+	top.location.href=location.href;
+}
+</script>
+<script type='text/javascript'>
+
+	window.status = window.defaultStatus = "Virtual Office";
+
+
+	$(document).ready(function () {
+
+
+
+
+
+
+
+
+
+
+		// @Note, check legcy UI warning hide flag
+		if (window.localStorage.getItem("legcyUIWarningHideFlag") === null) {
+			showLegcyUIWarning();
+		}
+	});
+
+function showLoginBoxFields(domainIndex)
+{
+	var f = document.Login;
+
+	if (typeof(isCAArray)!='undefined' && isCAArray[domainIndex])
+	{
+		f.username.value = "";
+		f.password.value = "";
+		f.username.disabled = true;
+		f.password.disabled = true;
+		f.action = "/cert-bin/certVerifyLogin";
+		f.verifyCert.value = 1;
+		f.loginButton.focus();
+	}
+	else if (typeof(isSAMLArray)!='undefined' && isSAMLArray[domainIndex])
+	{
+		f.username.value = "";
+		f.password.value = "";
+		f.username.disabled = true;
+		f.password.disabled = true;
+		f.loginButton.focus();
+		f.verifyCert.value = 0;
+		f.isSaml = "true";
+		f.action = "/cgi-bin/userLogin";
+	}
+	else
+	{
+		f.username.disabled = false;
+		f.password.disabled = false;
+		f.verifyCert.value = 0;
+		f.action = "/cgi-bin/userLogin";
+		f.isSaml = "false";
+	}
+}
+
+function autoCertLogin()
+{
+	if (typeof(isCAArray)!='undefined' && isCAArray.length==1 && isCAArray[0])
+	{
+		document.Login.loginButton.click();
+	}
+}
+
+function setCookie(cname, cvalue) {
+  var d = new Date();
+  d.setTime(d.getTime() + (2*365*24*60*60*1000)); //2 year
+  var expires = "expires="+ d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/" + ";secure";
+}
+
+function useContemporaryUI()
+{
+	setCookie("uimode", "contemporary");
+	window.location.href = "/spog/welcome";
+}
+
+function showLegcyUIWarning() {
+	$('#legcyUIWarning').show();	
+}
+function hideLegcyUIWarning() {
+	window.localStorage.setItem("legcyUIWarningHideFlag", true);
+	closeLegcyUIWarning();
+}
+
+function closeLegcyUIWarning() {
+	$('#legcyUIWarning').hide();	
+}
+
+</script>
+
+
+</head>
+<body onload="autoCertLogin();">
+
+	<div id='login_box_sonicwall' >
+
+			<div id='login_box_fields'>
+
+				<noscript><font color=red>Please enable JavaScript on your browser before proceeding.</font></noscript>
+				<div id="invalid"  >
+					<div id="invalid_text"></div>
+				</div>
+				<div id='login_table'>
+					<div id='userPassFormContainer'>
+						<form name="Login" action="/cgi-bin/userLogin" method="post">
+
+							<label for='username'>Username:</label>
+							<input type='text' name='username' id='username' class='required' autocomplete='off'><br>
+
+							<label for='password'>Password:</label>
+							<input type='password' name='password' id='password' class='required' autocomplete='off'><br>
+							<label for='domain'>Domain:</label>
+ <!-- Show Domains list box by default -->
+							<select name='domain' id='domain' onchange = "showLoginBoxFields(this.selectedIndex);">
+								<option value="LocalDomain">LocalDomain</option><script> var isCAArray =new Array(); isCAArray[0] = 0;</script><script> var isSAMLArray =new Array(); </script>
+							</select>
+
+							<div class='buttons'>
+								<input name="loginButton" id="loginButton" type="submit" value="Login" class='button' autocomplete='off'>
+							</div>
+ <!--PERSISTENT_COOKIE-->
+
+ <!--LOGIN_PENDING-->
+							<div class='processing'>
+								<img src='/images/loading_spinner.gif' alt='Processing...'> Processing...
+							</div>
+							<input type="hidden" name="state" value="login">
+							<input type="hidden" name="login" value="true">
+							<input type="hidden" name="web" value="true">
+							<input type="hidden" name="verifyCert" value="0">
+							<input type="hidden" name='portalname' value="VirtualOffice">
+						</form>
+					</div>
+					<div id='otpContainer'>
+					</div>
+					<div id='rsaContainer'>
+					</div>
+					<div id='changePwContainer'>
+					</div>
+					<div id='radiusChallengeContainer'>
+					</div>
+					<div id='pdaContainer'>
+
+					</div>
+					<div id='epcValidateContainer'>
+
+					</div>
+
+					<div style="text-align: center;">
+						<a href="javascript:useContemporaryUI();">Contemporary Mode</a>
+					</div>
+
+				</div>
+
+			</div>
+		</div>
+
+
+
+
+
+	<script type='text/javascript'>
+		showLoginBoxFields(document.Login.domain.selectedIndex);
+	</script>
+
+	<script type="text/javascript">
+		SWL_LOGIN.loginTokenInsert({tagId: "loginToken", tagVal: ""});
+	</script>
+
+    <div id="legcyUIWarning" class="bottom-bar-container" style="display:none">
+        <table id="bottom-bar-table">
+            <tr>
+                <td id="bottom-bar-message-td">
+                    <div class="bottom-bar-message">
+                        <p id="bottom-bar-message-p">
+                        This legacy SMA UI will deprecated in next release. Contemporary UI is recommended.
+                        </p>
+                    </div>
+                </td>
+                <td id="bottom-bar-buttons-td">
+                    <div class="bottom-bar-buttons">
+                        <input id="bottom-bar-button-1" type="button" value="Don't show again" onclick="hideLegcyUIWarning()" />
+                        <input id="bottom-bar-button-3" type="button" value="Close" onclick="closeLegcyUIWarning()" />
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body></html>

@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv='Content-Type' content='text/html;charset=UTF-8'>
+<title>Virtual Office</title>
+<meta http-equiv='pragma' content='no-cache'>
+<meta http-equiv='cache-control' content='no-cache'>
+<meta http-equiv='cache-control' content='must-revalidate'>
+<meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+<link href='/swl_login.10.2.1.7-50sv.css' type='text/css' rel='stylesheet'>
+<link href='/swl_header.10.2.1.7-50sv.css' type='text/css' rel='stylesheet'>
+<link type="text/css" href='/sma_content_overrides.10.2.1.7-50sv.css' rel='stylesheet'>
+<link href='/sma_login_overrides.10.2.1.7-50sv.css' type='text/css' rel='stylesheet'>		
+<script src="/js/jquery.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+
+<script src="/js/jquery.cookie.10.2.1.7-50sv.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/portalframe.10.2.1.7-50sv.js"></script>
+<script type='text/javascript'>
+
+	/* delete cookies set by rproxy bookmarks set for '/' */
+
+	$.each(document.cookie.split(/; */), function(index, cookieString)  {
+	  var splitCookie = cookieString.split('=');
+	  if(splitCookie[0].match(/^(__proxy_ssl_vpn_|sw_sso_fba_)/))
+	  {
+	  	$.cookie(splitCookie[0], "null", { expires: -1, path: '/' });
+	  }
+	});
+
+	function winclose(){
+		window.open('','_parent','');
+		window.close();
+	}
+	$(document).ready(function() {
+	
+		if(window!=top) {
+			top.location.href=window.document.location;
+		}
+		if (!$.browser.ie) {
+			$('#securityMsg').text("For security reasons, you should close this window.");
+		}
+		
+			window.opener='';
+			window.open('','_parent','');
+			window.close();
+		
+	
+	});
+</script>
+
+	<style type='text/css'>
+		#banner_logo { background: url(/images/logo/VirtualOffice.gif) no-repeat left center; }
+	</style>
+
+
+<style>
+#custom-logo {
+	background: url('/images/logo/VirtualOffice.gif') no-repeat left center;
+	width: 146px;
+	height: 67px;
+
+}
+</style>
+
+</head>
+<body>
+	<div id='login_box_sonicwall'  class='login_box_custom' >
+		
+			<div class="row-1">
+				<div id="custom-logo" class="logo"></div>
+				<div class="product-logo-txt">Virtual Office</div>
+			</div>
+		
+		<div id='login_box_fields'>
+			<noscript><font color=red>Please enable JavaScript on your browser before proceeding.</font></noscript>
+			<div id="invalid"  >
+				<div id="invalid_text"></div>
+			</div>
+			<div id='login_table'>
+				<p><b>You have successfully logged out.</b></p>
+				<p>
+				
+					<span id='securityMsg'>For security reasons, you should <a href="javascript:winclose();">close this window</a>.</span>
+				
+				</p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+
+<SCRIPT LANGUAGE="VBScript">
+<!--
+Sub window_onLoad()
+call winclose()
+end sub
+-->
+</script>
+</body></html>

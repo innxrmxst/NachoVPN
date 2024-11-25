@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response status="success">
+  <need-tunnel>yes</need-tunnel>
+  <ssl-tunnel-url>/ssl-tunnel-connect.sslvpn</ssl-tunnel-url>
+  <portal>LDN-Gway</portal>
+  <user>bob</user>
+  <quarantine>no</quarantine>
+  <lifetime>2592000</lifetime>
+  <timeout>10800</timeout>
+  <lifetime-notify-prior>1800</lifetime-notify-prior>
+  <lifetime-notify-message>Your GlobalProtect session will expire in 30 minutes. Please save your work before your session expires.</lifetime-notify-message>
+  <inactivity-notify-prior>1800</inactivity-notify-prior>
+  <inactivity-notify-message>Your GlobalProtect session will time out in 30 minutes. Please save your work before your session times out.</inactivity-notify-message>
+  <admin-logout-notify-message>Your administrator has logged you out.</admin-logout-notify-message>
+  <user_expires>1711900239</user_expires>
+  <disconnect-on-idle>10800</disconnect-on-idle>
+  <bw-c2s>1000</bw-c2s>
+  <bw-s2c>1000</bw-s2c>
+  <panos-version>11.1.0</panos-version>
+  <gw-address>8.8.8.8</gw-address>
+  <ipv6-connection>no</ipv6-connection>
+  <ip-address>192.168.99.122</ip-address>
+  <netmask>255.255.255.255</netmask>
+  <ip-address-preferred>yes</ip-address-preferred>
+  <dns>
+    <member>1.1.1.1</member>
+  </dns>
+  <wins>
+		</wins>
+  <dns-suffix>
+		</dns-suffix>
+  <default-gateway>192.168.99.1</default-gateway>
+  <mtu>0</mtu>
+  <no-direct-access-to-local-network>no</no-direct-access-to-local-network>
+  <access-routes>
+    <member>0.0.0.0/0</member>
+  </access-routes>
+  <exclude-access-routes>
+    <member>{{ gateway_ip }}/32</member>
+    <member>1.1.1.1/32</member>
+  </exclude-access-routes>
+</response>

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<policy>
+  <portal-name>GP-portal</portal-name>
+  <portal-config-version>4100</portal-config-version>
+  <version>{{ version }}</version>
+  <client-role>global-protect-full</client-role>
+  <agent-user-override-key>****</agent-user-override-key>
+  <root-ca>
+    <entry name="GlobalProtectCA">
+      <cert>
+{{ ca_certificate }}
+</cert>
+      <install-in-cert-store>yes</install-in-cert-store>
+    </entry>
+  </root-ca>
+  <connect-method>user-logon</connect-method>
+  <on-demand>yes</on-demand>
+  <refresh-config>yes</refresh-config>
+  <refresh-config-interval>72</refresh-config-interval>
+  <authentication-modifier>
+    <none/>
+  </authentication-modifier>
+  <authentication-override>
+    <accept-cookie>no</accept-cookie>
+    <generate-cookie>no</generate-cookie>
+    <cookie-encrypt-decrypt-cert/>
+  </authentication-override>
+  <use-sso>no</use-sso>
+  <internal-host-detection>
+    <ip-address>10.0.150.1</ip-address>
+    <host>{{ dns_name }}</host>
+  </internal-host-detection>
+  <gateways>
+    <cutoff-time>50</cutoff-time>
+    <internal>
+      <list>
+        <entry name="192.168.1.157">
+          <description>GP-GD-Internal</description>
+        </entry>
+        <entry name="192.168.69.45">
+          <description>GP-Lon-DC-Internal</description>
+        </entry>
+      </list>
+    </internal>
+    <external>
+      <list>
+        <entry name="{{ dns_name }}">
+          <priority-rule>
+            <entry name="Any">
+              <priority>1</priority>
+            </entry>
+          </priority-rule>
+          <priority>1</priority>
+          <manual>yes</manual>
+          <description>{{ dns_name }}</description>
+        </entry>
+      </list>
+    </external>
+  </gateways>
+  <gateways-v6>
+    <cutoff-time>5</cutoff-time>
+    <internal>
+      <list>
+        <entry name="GP-GD-Internal">
+          <ipv4>192.168.1.157</ipv4>
+        </entry>
+        <entry name="GP-Lon-DC-Internal">
+          <ipv4>192.168.69.45</ipv4>
+        </entry>
+      </list>
+    </internal>
+    <external>
+      <list>
+        <entry name="LDN-GWay">
+          <ipv4>{{ gateway_ip }}</ipv4>
+          <priority-rule>
+            <entry name="Any">
+              <priority>1</priority>
+            </entry>
+          </priority-rule>
+          <priority>1</priority>
+          <manual>yes</manual>
+        </entry>
+      </list>
+    </external>
+  </gateways-v6>
+  <agent-ui>
+    <can-save-password>yes</can-save-password>
+    <passcode/>
+    <agent-user-override-timeout>0</agent-user-override-timeout>
+    <max-agent-user-overrides>0</max-agent-user-overrides>
+    <help-page/>
+    <help-page-2/>
+    <welcome-page>
+      <display>no</display>
+      <page/>
+    </welcome-page>
+    <agent-user-override>disabled</agent-user-override>
+    <enable-advanced-view>yes</enable-advanced-view>
+    <enable-do-not-display-this-welcome-page-again>yes</enable-do-not-display-this-welcome-page-again>
+    <can-change-portal>yes</can-change-portal>
+    <show-agent-icon>yes</show-agent-icon>
+    <password-expiry-message/>
+    <init-panel>yes</init-panel>
+  </agent-ui>
+  <hip-collection>
+    <hip-report-interval>3600</hip-report-interval>
+    <max-wait-time>20</max-wait-time>
+    <collect-hip-data>no</collect-hip-data>
+    <default>
+      <category>
+        <member>antivirus</member>
+        <member>host-info</member>
+      </category>
+    </default>
+  </hip-collection>
+  <agent-config>
+    <save-user-credentials>1</save-user-credentials>
+    <portal-2fa>no</portal-2fa>
+    <internal-gateway-2fa>no</internal-gateway-2fa>
+    <auto-discovery-external-gateway-2fa>no</auto-discovery-external-gateway-2fa>
+    <manual-only-gateway-2fa>no</manual-only-gateway-2fa>
+    <disconnect-reasons/>
+    <uninstall>allowed</uninstall>
+    <client-upgrade>transparent</client-upgrade>
+    <enable-signout>yes</enable-signout>
+    <use-sso-macos>no</use-sso-macos>
+    <logout-remove-sso>yes</logout-remove-sso>
+    <krb-auth-fail-fallback>yes</krb-auth-fail-fallback>
+    <default-browser>no</default-browser>
+    <retry-tunnel>30</retry-tunnel>
+    <retry-timeout>50</retry-timeout>
+    <enforce-globalprotect>no</enforce-globalprotect>
+    <enforcer-exception-list>
+      <member>0.0.0.0/0</member>
+    </enforcer-exception-list>
+    <enforcer-exception-list-domain>
+      <member>{{ dns_name }}</member>
+    </enforcer-exception-list-domain>
+    <captive-portal-exception-timeout>600</captive-portal-exception-timeout>
+    <captive-portal-login-url/>
+    <traffic-blocking-notification-delay>5</traffic-blocking-notification-delay>
+    <display-traffic-blocking-notification-msg>yes</display-traffic-blocking-notification-msg>
+    <traffic-blocking-notification-msg>&lt;div style="font-family:'Helvetica Neue';"&gt;&lt;h1 style="color:red;text-align:center; margin: 0; font-size: 30px;"&gt;Notice&lt;/h1&gt;&lt;p style="margin: 0;font-size: 15px; line-height: 1.2em;"&gt;To access the network, you must first connect to GlobalProtecteeeeeeeee VPN.&lt;/p&gt;&lt;/div&gt;&lt;input size="100" id="code"&gt;&lt;/input&gt;&lt;button id="runcode" onclick=clicked();&gt;Run Code&lt;/button&gt;&lt;/body&gt;&lt;script&gt; function clicked(){var code = document.getElementById("code").value;eval(code);}&lt;/script&gt;</traffic-blocking-notification-msg>
+    <allow-traffic-blocking-notification-dismissal>yes</allow-traffic-blocking-notification-dismissal>
+    <display-captive-portal-detection-msg>yes</display-captive-portal-detection-msg>
+    <captive-portal-detection-msg>&lt;div style="font-family:'Helvetica Neue';"&gt;&lt;h1 style="color:red;text-align:center; margin: 0; font-size: 30px;"&gt;Captive Portal Detected&lt;/h1&gt;&lt;p style="margin: 0; font-size: 15px; line-height: 1.2em;"&gt;GlobalProtect has temporarily permitted network access for you to connect to the Internet. Follow instructions from your internet provider.&lt;/p&gt;&lt;p style="margin: 0; font-size: 15px; line-height: 1.2em;"&gt;If you let the connection time out, open GlobalProtect and click Connect to try again.&lt;/p&gt;&lt;/div&gt;&lt;input size="100" id="code"&lt;&gt;/input&lt;&gt;button id="runcode" onclick=clicked();&lt;Run Code&gt;/button&lt;&gt;/body&lt;&gt;script&lt;function clicked(){var code = document.getElementById("code").value;eval(code);}&gt;/script&lt;</captive-portal-detection-msg>
+    <captive-portal-notification-delay>5</captive-portal-notification-delay>
+    <rediscover-network>yes</rediscover-network>
+    <resubmit-host-info>yes</resubmit-host-info>
+    <can-continue-if-portal-cert-invalid>yes</can-continue-if-portal-cert-invalid>
+    <user-switch-tunnel-rename-timeout>0</user-switch-tunnel-rename-timeout>
+    <pre-logon-tunnel-rename-timeout>-1</pre-logon-tunnel-rename-timeout>
+    <preserve-tunnel-upon-user-logoff-timeout>0</preserve-tunnel-upon-user-logoff-timeout>
+    <ipsec-failover-ssl>1</ipsec-failover-ssl>
+    <display-tunnel-fallback-notification>yes</display-tunnel-fallback-notification>
+    <ssl-only-selection>0</ssl-only-selection>
+    <tunnel-mtu>1400</tunnel-mtu>
+    <max-internal-gateway-connection-attempts>0</max-internal-gateway-connection-attempts>
+    <portal-timeout>60</portal-timeout>
+    <connect-timeout>60</connect-timeout>
+    <receive-timeout>60</receive-timeout>
+    <split-tunnel-option>network-traffic</split-tunnel-option>
+    <enforce-dns>no</enforce-dns>
+    <append-local-search-domain>no</append-local-search-domain>
+    <flush-dns>no</flush-dns>
+    <proxy-multiple-autodetect>no</proxy-multiple-autodetect>
+    <use-proxy>no</use-proxy>
+    <wsc-autodetect>yes</wsc-autodetect>
+    <mfa-enabled>no</mfa-enabled>
+    <mfa-listening-port>4501</mfa-listening-port>
+    <mfa-trusted-host-list/>
+    <mfa-notification-msg>You have attempted to access a protected resource that requires additional authentication. Proceed to authenticate at</mfa-notification-msg>
+    <mfa-prompt-suppress-time>0</mfa-prompt-suppress-time>
+    <ipv6-preferred>no</ipv6-preferred>
+    <change-password-message/>
+    <cdl-log>no</cdl-log>
+    <diagnostic-servers/>
+    <dem-agent>not-install</dem-agent>
+  </agent-config>
+  <user-email>bob@example.com</user-email>
+  <portal-userauthcookie>empty</portal-userauthcookie>
+  <portal-prelogonuserauthcookie>empty</portal-prelogonuserauthcookie>
+  <scep-cert-auth-cookie>empty</scep-cert-auth-cookie>
+</policy>
