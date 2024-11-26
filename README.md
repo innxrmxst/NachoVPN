@@ -54,7 +54,7 @@ pip install git+https://github.com/AmberWolfCyber/NachoVPN.git
 If you prefer to use Docker, then you can pull the container from the GitHub Container Registry:
 
 ```bash
-docker pull ghcr.io/amberwolfcyber/nachovpn:latest
+docker pull ghcr.io/amberwolfcyber/nachovpn:release
 ```
 
 ## Building for distribution

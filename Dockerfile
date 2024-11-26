@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc-mingw-w64 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
 COPY setup.py .
 COPY manifest.in .
 COPY requirements.txt .
@@ -21,7 +23,9 @@ COPY src/ src/
 
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir certbot
-RUN pip install --no-cache-dir .
+
+RUN python setup.py sdist bdist_wheel
+RUN pip install --no-cache-dir dist/*.whl
 
 EXPOSE 80
 EXPOSE 443
