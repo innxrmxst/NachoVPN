@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 COPY setup.py .
-COPY manifest.in .
+COPY MANIFEST.in .
 COPY requirements.txt .
 COPY src/ src/
 
