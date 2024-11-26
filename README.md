@@ -15,7 +15,7 @@ NachoVPN is a Proof of Concept that demonstrates exploitation of SSL-VPN clients
 
 It uses a plugin-based architecture so that support for additional SSL-VPN products can be contributed by the community. It currently supports various popular corporate VPN products, such as Cisco AnyConnect, SonicWall NetExtender, Palo Alto GlobalProtect, and Ivanti Connect Secure.
 
-For further details, see our [blog post](#), and HackFest Hollywood 2024 presentation [[slides](https://github.com/AmberWolfCyber/presentations/blob/main/2024/Very%20Pwnable%20Networks%20-%20HackFest%20Hollywood%202024.pdf)|[video](https://www.youtube.com/watch?v=-MZfkmcZRVg)].
+For further details, see our [blog post](https://blog.amberwolf.com/blog/2024/november/introducing-nachovpn---one-vpn-server-to-pwn-them-all/), and HackFest Hollywood 2024 presentation [[slides](https://github.com/AmberWolfCyber/presentations/blob/main/2024/Very%20Pwnable%20Networks%20-%20HackFest%20Hollywood%202024.pdf)|[video](https://www.youtube.com/watch?v=-MZfkmcZRVg)].
 
 ## Installation
 
@@ -130,8 +130,8 @@ NachoVPN supports the following plugins and capabilities:
 | Plugin | Product | CVE | Windows RCE | macOS RCE | Privileged | URI Handler | Packet Capture | Demo |
 | -------- | ----------- | -------- | -------- | -------- | -------- | -------- | -------- | ---- |
 | Cisco | Cisco AnyConnect | N/A | ✅ | ✅ | ❌ | ❌ | ✅ | [Windows](https://vimeo.com/1024773762) / [macOS](https://vimeo.com/1024773668) |
-| SonicWall | SonicWall NetExtender | CVE-2024-29014 | ✅ | ❌ | ✅ | ✅ | ❌ | [Windows](https://vimeo.com/1024774407) |
-| PaloAlto | Palo Alto GlobalProtect | N/A | ✅ | ✅ | ✅ | ❌ | ✅ | [Windows](https://vimeo.com/1024774239) / [macOS](https://vimeo.com/1024773987) / [iOS](https://vimeo.com/1024773956) |
+| SonicWall | SonicWall NetExtender | [CVE-2024-29014](https://blog.amberwolf.com/blog/2024/november/sonicwall-netextender-for-windows---rce-as-system-via-epc-client-update-cve-2024-29014/) | ✅ | ❌ | ✅ | ✅ | ❌ | [Windows](https://vimeo.com/1024774407) |
+| PaloAlto | Palo Alto GlobalProtect | [CVE-2024-5921](https://blog.amberwolf.com/blog/2024/november/palo-alto-globalprotect---code-execution-and-privilege-escalation-via-malicious-vpn-server-cve-2024-5921/) (partial fix) | ✅ | ✅ | ✅ | ❌ | ✅ | [Windows](https://vimeo.com/1024774239) / [macOS](https://vimeo.com/1024773987) / [iOS](https://vimeo.com/1024773956) |
 | PulseSecure | Ivanti Connect Secure | N/A | ✅ | ✅ | ❌ | ✅ (Windows only) | ✅ | [Windows](https://vimeo.com/1024773914) |
 
 #### URI handlers
@@ -200,8 +200,8 @@ We recommend the following mitigations:
 
 ## References
 
-* [AmberWolf Blog: NachoVPN](#)
-* [HackFest Hollywood 2024: Very Pwnable Networks: Exploiting the Top Corporate VPN Clients for Remote Root and SYSTEM Shells, Rich Warren & David Cash](https://github.com/AmberWolfCyber/presentations/blob/main/2024/Very%20Pwnable%20Networks%20-%20HackFest%20Hollywood%202024.pdf) ([video](https://www.youtube.com/watch?v=-MZfkmcZRVg))
+* [AmberWolf Blog: NachoVPN](https://blog.amberwolf.com/blog/2024/november/introducing-nachovpn---one-vpn-server-to-pwn-them-all/)
+* [HackFest Hollywood 2024: Very Pwnable Networks: Exploiting the Top Corporate VPN Clients for Remote Root and SYSTEM Shells, Rich Warren & David Cash](https://github.com/AmberWolfCyber/presentations/blob/main/2024/Very%20Pwnable%20Networks%20-%20HackFest%20Hollywood%202024.pdf) [[video](https://www.youtube.com/watch?v=-MZfkmcZRVg)]
 * [BlackHat 2008: Leveraging the Edge: Abusing SSL VPNs, Mike Zusman](https://www.blackhat.com/presentations/bh-usa-08/Zusman/BH_US_08_Zusman_SSL_VPN_Abuse.pdf)
 * [BlackHat 2019: Infiltrating Corporate Intranet Like NSA, Orange Tsai & Meh Chang](https://i.blackhat.com/USA-19/Wednesday/us-19-Tsai-Infiltrating-Corporate-Intranet-Like-NSA.pdf)
 * [NCC Group: Making New Connections: Leveraging Cisco AnyConnect Client to Drop and Run Payloads, David Cash & Julian Storr](https://www.nccgroup.com/uk/research-blog/making-new-connections-leveraging-cisco-anyconnect-client-to-drop-and-run-payloads/)
