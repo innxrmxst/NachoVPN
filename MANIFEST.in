@@ -1,1 +1,2 @@
 recursive-include src/nachovpn/plugins **/templates/*
+recursive-include src/nachovpn/plugins **/files/*
