@@ -35,7 +35,7 @@ class PaloAltoPlugin(VPNPlugin):
         self.pkg_command = os.getenv("PALO_ALTO_PKG_COMMAND", "touch /tmp/pwnd")
         self.msi_command = os.getenv(
             "PALO_ALTO_MSI_COMMAND",
-            r"calc.exe"
+            r"notepad.exe C:\\Users\\evasion\\Desktop\\pwn3d.txt"
         )
 
         # Certificate paths
